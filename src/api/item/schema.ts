@@ -28,11 +28,25 @@ const DeadFlag = {
   }),
 };
 
+const KidsField = {
+  kids: t.Optional(
+    t.Array(
+      t.Integer({
+        title: "Child Item ID",
+        description: "ID of a child item whose parent is this item",
+      }),
+      {
+        title: "Kids",
+        description: "List of child item IDs",
+      }))
+};
+
 export const SelectItem = t.Union([
   t.Object({
     type: t.Literal("comment"),
     ...BaseMeta,
     ...DeadFlag,
+    ...KidsField,
     text: t.String({
       title: "Comment Text",
       description: "Content of the comment",
@@ -54,6 +68,7 @@ export const SelectItem = t.Union([
     type: t.Literal("story"),
     ...BaseMeta,
     ...DeadFlag,
+    ...KidsField,
     url: t.String({
       title: "Story URL",
       description: "External link of the story",
@@ -80,6 +95,10 @@ export const SelectItem = t.Union([
     url: t.String({
       title: "Job URL",
       description: "Link to the job posting",
+    }),
+    score: t.Integer({
+      title: "Score",
+      description: "Score of the Job",
     }),
   }, {
     title: "Job Item",

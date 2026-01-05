@@ -18,8 +18,7 @@ export const items = sqliteTable("items", {
     }),
 
   time: integer().notNull()
-    .$defaultFn(() => new Date().getTime())
-    .$onUpdate(() => new Date().getTime()),
+    .$defaultFn(() => new Date().getTime()),
 
   text: text(),
 
@@ -34,7 +33,7 @@ export const items = sqliteTable("items", {
 
   url: text(),
 
-  score: integer().default(0),
+  score: integer().notNull().default(0),
 
   title: text(),
 });
