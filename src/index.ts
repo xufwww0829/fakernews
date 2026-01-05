@@ -3,6 +3,7 @@ import { Elysia } from "elysia";
 import { item } from "./api/item";
 import { user } from "./api/user";
 import { top } from "./api/top";
+import games from "./api/games";
 import { env } from "./env";
 
 const app = new Elysia()
@@ -12,6 +13,7 @@ const app = new Elysia()
   .use(item)
   .use(user)
   .use(top)
+  .use(games)
   .listen(env.PORT);
 
 console.log(
