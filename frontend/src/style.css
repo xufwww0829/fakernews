@@ -1,0 +1,176 @@
+:root {
+  /* Brand Colors */
+  --accent: #d95a00;
+  --accent-hover: #c45100;
+  --accent-light: #ff7d24;
+
+  /* Light Theme */
+  --bg-primary-light: #ffffff;
+  --bg-secondary-light: #f7f7f7;
+  --bg-hover-light: #f0f0f0;
+  --text-primary-light: #1f2937;
+  --text-secondary-light: #6b7280;
+  --text-tertiary-light: #9ca3af;
+  --border-light: #e5e7eb;
+  --link-light: var(--accent);
+  --link-hover-light: var(--accent-hover);
+  --shadow-light: rgba(0, 0, 0, 0.05);
+
+  /* Dark Theme */
+  --bg-primary-dark: #111827;
+  --bg-secondary-dark: #1f2937;
+  --bg-hover-dark: #374151;
+  --text-primary-dark: #f9fafb;
+  --text-secondary-dark: #d1d5db;
+  --text-tertiary-dark: #9ca3af;
+  --border-dark: #374151;
+  --link-dark: var(--accent-light);
+  --link-hover-dark: #ff9d57;
+  --shadow-dark: rgba(0, 0, 0, 0.2);
+
+  /* Typography */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Transitions */
+  --transition-fast: all 0.2s ease-in-out;
+}
+
+:root {
+  --bg-primary: var(--bg-primary-light);
+  --bg-secondary: var(--bg-secondary-light);
+  --bg-hover: var(--bg-hover-light);
+  --text-primary: var(--text-primary-light);
+  --text-secondary: var(--text-secondary-light);
+  --text-tertiary: var(--text-tertiary-light);
+  --link: var(--link-light);
+  --link-hover: var(--link-hover-light);
+  --border: var(--border-light);
+  --shadow: var(--shadow-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg-primary: var(--bg-primary-dark);
+    --bg-secondary: var(--bg-secondary-dark);
+    --bg-hover: var(--bg-hover-dark);
+    --text-primary: var(--text-primary-dark);
+    --text-secondary: var(--text-secondary-dark);
+    --text-tertiary: var(--text-tertiary-dark);
+    --link: var(--link-dark);
+    --link-hover: var(--link-hover-dark);
+    --border: var(--border-dark);
+    --shadow: var(--shadow-dark);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+#app {
+  flex-grow: 1;
+  width: 100%;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: none;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+}
+
+input:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: transparent;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  line-height: 1.3;
+  font-weight: 600;
+  margin-bottom: 0.75em;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+
+p {
+  margin-bottom: 1em;
+  line-height: 1.7;
+}
+
+/* Utility Classes */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  font-size: 1.1em;
+}
+
+/* Animation */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
