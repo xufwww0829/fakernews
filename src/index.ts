@@ -1,6 +1,7 @@
 import { openapi, fromTypes } from '@elysiajs/openapi'
 import { Elysia } from "elysia";
 import { item } from "./api/item";
+import { user } from "./api/user";
 import { env } from "./env";
 
 const app = new Elysia()
@@ -8,6 +9,7 @@ const app = new Elysia()
     references: fromTypes()
   }))
   .use(item)
+  .use(user)
   .listen(env.PORT);
 
 console.log(
