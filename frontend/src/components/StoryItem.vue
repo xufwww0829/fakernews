@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import { RouterLink } from "vue-router";
+import { api } from "@/api";
 
 const props = defineProps({
   story: {
@@ -30,11 +31,20 @@ const timeAgo = computed(() => {
   return `${Math.floor(seconds / 86400)}d ago`;
 });
 
-const handleUpvote = (event) => {
-  event.stopPropagation(); // Prevent the parent RouterLink from navigating
-  // TODO: 实现点赞逻辑
-  console.log("Upvote story:", props.story.id);
+const handleUpvote = async (event) => {
+  event.stopPropagation(); // Prevent parent RouterLink from navigating
+  
+  try {
+    const result = await api.voteItem(props.story.id, 'up');
+    // Update the story's score locally
+    if (result && result.score !== undefined) {
+      props.story.score = result.score;
+    }
+  } catch (error) {
+    console.error("Failed to upvote:", error);
+  }
 };
+
 </script>
 
 <template>
@@ -42,11 +52,14 @@ const handleUpvote = (event) => {
     <article class="story-item" :href="href" @click="navigate">
       <div class="story-rank" v-if="rank">{{ rank }}.</div>
       
-      <button class="upvote-btn" @click="handleUpvote" title="Upvote">
-        <svg width="10" height="10" viewBox="0 0 10 10">
-          <path d="M5 0 L10 10 L0 10 Z" fill="currentColor" />
-        </svg>
-      </button>
+      <div class="upvote-score-container">
+        <button class="upvote-btn" @click="handleUpvote" title="Upvote">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path d="M5 0 L10 10 L0 10 Z" fill="currentColor" />
+          </svg>
+        </button>
+        <div class="story-score">{{ story.score }}</div>
+      </div>
       
       <div class="story-content">
         <div class="story-title-row">
@@ -68,8 +81,6 @@ const handleUpvote = (event) => {
         </div>
         
         <div class="story-meta">
-          <span class="story-score">{{ story.score }} points</span>
-          <span class="separator">•</span>
           <RouterLink :to="`/user/${story.by}`" class="story-author" @click.stop>
             {{ story.by }}
           </RouterLink>
@@ -80,9 +91,9 @@ const handleUpvote = (event) => {
             {{ story.descendants || 0 }} comments
           </span>
         </div>
-      </div>
-    </article>
-  </RouterLink>
+       </div>
+     </article>
+   </RouterLink>
 </template>
 
 <style scoped>
@@ -117,15 +128,28 @@ const handleUpvote = (event) => {
   padding-top: 2px;
 }
 
+.upvote-score-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
 .upvote-btn {
   padding: 4px;
   color: var(--text-tertiary);
-  transition: color 0.2s;
-  margin-top: 2px;
+  transition: all 0.2s;
 }
 
 .upvote-btn:hover {
   color: var(--accent);
+  transform: scale(1.2);
+}
+
+.story-score {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 13px;
 }
 
 .story-content {
@@ -139,6 +163,13 @@ const handleUpvote = (event) => {
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 6px;
+}
+
+.upvote-score-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .story-title {

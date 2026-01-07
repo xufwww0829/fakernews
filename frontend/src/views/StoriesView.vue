@@ -22,8 +22,11 @@ const loadStories = async (isLoadMore = false) => {
   loading.value = true;
   error.value = null;
 
+  console.log("Loading stories, type:", type.value, "page:", page.value);
+
   try {
     const newStories = await api.getStories(type.value, page.value);
+    console.log("Loaded stories:", newStories);
     if (newStories.length === 0) {
       hasMore.value = false;
     }

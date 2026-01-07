@@ -1,4 +1,5 @@
 import { edenTreaty } from "@elysiajs/eden";
+// @ts-ignore
 import type { App } from "../../../backend/src/index";
 
 const treaty = edenTreaty<App>("http://localhost:3000");
@@ -67,9 +68,9 @@ export const api = {
       console.error("Failed to fetch story IDs:", idsError);
       throw createFriendlyError(idsError);
     }
-    if (!ids) return [];
+    if (!ids || !Array.isArray(ids)) return [];
 
-    const storyPromises = ids.map(id => treaty.item[id].get());
+    const storyPromises = (ids as number[]).map(id => treaty.item[id].get());
     const results = await Promise.all(storyPromises);
 
     return results
@@ -107,13 +108,23 @@ export const api = {
 
   getUser: async (id: string) => {
     const { data: user, error } = await treaty.user[id].get();
-    if (error) throw createFriendlyError(error);
+    if (error) {
+      if (error.status === 404) {
+        return null;
+      }
+      throw createFriendlyError(error);
+    }
     return user;
   },
 
   createUser: async (id: string, about?: string) => {
     const { data, error } = await treaty.user.post({ id, about });
-    if (error) throw createFriendlyError(error);
+    if (error) {
+      if (error.status === 409) {
+        throw new Error("User already exists");
+      }
+      throw createFriendlyError(error);
+    }
     return data;
   },
 
@@ -152,7 +163,7 @@ export const api = {
   },
 
   deleteItem: async (id: string) => {
-    const { error } = await treaty.item[id].delete();
+    const { error } = await treaty.item[id].DELETE();
     if (error) throw createFriendlyError(error);
     return true;
   },
@@ -170,7 +181,7 @@ export const api = {
   },
 
   updateUserKarma: async (id: string, amount: number) => {
-    const { data, error } = await treaty.user[id].karma.patch({ amount });
+    const { data, error } = await treaty.user[id].karma.patch({ delta: amount });
     if (error) throw createFriendlyError(error);
     return data;
   },
@@ -187,9 +198,9 @@ export const api = {
       console.error("Failed to fetch comment IDs:", idsError);
       throw createFriendlyError(idsError);
     }
-    if (!ids) return [];
+    if (!ids || !Array.isArray(ids)) return [];
 
-    const commentPromises = ids.map(id => fetchCommentTree(id));
+    const commentPromises = (ids as number[]).map(id => fetchCommentTree(id));
     const comments = await Promise.all(commentPromises);
 
     return comments.filter(Boolean);

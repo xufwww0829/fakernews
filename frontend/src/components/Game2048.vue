@@ -7,6 +7,7 @@
     <div v-if="highScore > 0" class="score-container">
       High Score: <span class="score">{{ highScore }}</span>
     </div>
+    <div v-if="scoreSaved" class="score-saved">Score saved!</div>
     <button @click="newGame">New Game</button>
     <p v-if="!user" class="login-warning">Log in to save your high scores!</p>
     <div class="grid-container" ref="gameContainer">
@@ -43,12 +44,15 @@ const threshold = 30; // Minimum distance for a swipe
 
 const { user } = useAuth();
 const highScore = ref(0);
+const scoreSaved = ref(false);
 
 const initializeGrid = () => {
+  console.log("initializeGrid - current user:", user.value);
   grid.value = Array.from({ length: gridSize }, () => Array(gridSize).fill(0));
   score.value = 0;
   gameOver.value = false;
   moves.value = 0;
+  scoreSaved.value = false;
   addRandomTile();
   addRandomTile();
 };
@@ -199,6 +203,8 @@ const checkGameOver = () => {
     }
   }
   gameOver.value = true;
+  console.log("Game over detected - score:", score.value, "user:", user.value);
+  submitScore();
 };
 
 const handleMove = (direction: 'up' | 'down' | 'left' | 'right') => {
@@ -292,50 +298,83 @@ const handleMouseUp = (e: MouseEvent) => {
 
 const submitScore = async () => {
   const currentUserId = user.value;
-  if (score.value === 0 || !currentUserId) return;
+  console.log("submitScore called - userId:", currentUserId, "score:", score.value, "scoreSaved:", scoreSaved.value);
+
+  if (score.value === 0) {
+    console.log("Score submission skipped - score is 0");
+    return;
+  }
+
+  if (!currentUserId) {
+    console.log("Score submission skipped - no user logged in");
+    return;
+  }
+
+  if (scoreSaved.value) {
+    console.log("Score submission skipped - already saved");
+    return;
+  }
 
   const bestTile = getBestTile();
+  console.log("Submitting 2048 score:", { userId: currentUserId, score: score.value, bestTile, moves: moves.value });
 
   try {
     const response = await api.submit2048Score(currentUserId, score.value, bestTile, moves.value);
+    console.log("Submit response:", response);
     if (!response || (response as any).error) {
       console.error("Failed to submit 2048 score");
+      scoreSaved.value = false;
     } else {
-      loadScores();
+      scoreSaved.value = true;
+      await loadScores();
     }
   } catch (error) {
     console.error("Error submitting 2048 score:", error);
+    scoreSaved.value = false;
   }
 };
 
 const loadScores = async () => {
   const currentUserId = user.value;
-  if (!currentUserId) return;
+  console.log("loadScores called - userId:", currentUserId);
+  if (!currentUserId) {
+    highScore.value = 0;
+    return;
+  }
 
   try {
     const userScores = await api.get2048UserScores(currentUserId);
+    console.log("User scores loaded:", userScores);
     if (userScores && userScores.length > 0) {
       const highestScore = userScores.reduce((max: number, current: any) => Math.max(max, current.score), 0);
       highScore.value = highestScore;
     } else {
       highScore.value = 0;
     }
+    scoreSaved.value = false;
   } catch (error) {
     console.error("Error loading 2048 scores:", error);
+    highScore.value = 0;
   }
 };
 
-const newGame = () => {
+const newGame = async () => {
+  console.log("newGame called - current score:", score.value, "gameOver:", gameOver.value, "scoreSaved:", scoreSaved.value);
+  
+  // 如果有分数且未保存，先提交分数
+  if (score.value > 0 && !scoreSaved.value && user.value) {
+    console.log("Submitting score before starting new game");
+    await submitScore();
+  }
+  
+  // 重置游戏状态
+  gameOver.value = false;
+  scoreSaved.value = false;
   initializeGrid();
 };
 
-watch(gameOver, (newVal) => {
-  if (newVal) {
-    submitScore();
-  }
-});
-
 onMounted(() => {
+  console.log("Game2048 mounted - current user:", user.value);
   initializeGrid();
   loadScores();
   window.addEventListener('keydown', handleKeyDown);
@@ -470,5 +509,11 @@ button:hover {
   font-weight: bold;
   color: #776e65;
   margin-bottom: 20px;
+}
+
+.score-saved {
+  color: #42b883;
+  font-size: 1em;
+  margin-bottom: 10px;
 }
 </style>

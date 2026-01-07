@@ -5,7 +5,6 @@ import { useAuth } from "../auth";
 import { api } from "../api";
 
 const username = ref("");
-const password = ref("");
 const isRegister = ref(false);
 const loading = ref(false);
 const error = ref(null);
@@ -15,29 +14,35 @@ const auth = useAuth();
 const handleSubmit = async () => {
   loading.value = true;
   error.value = null;
-  
-  if (!username.value) {
+
+  if (!username.value || !username.value.trim()) {
     error.value = "Username is required.";
     loading.value = false;
     return;
   }
 
+  const trimmedUsername = username.value.trim();
+
   try {
     if (isRegister.value) {
-      // Register new user
-      await api.createUser(username.value);
+      try {
+        await api.createUser(trimmedUsername);
+      } catch (e) {
+        if (e.message.includes("already exists") || e.message.includes("409")) {
+          throw new Error("User already exists. Please login instead.");
+        }
+        throw e;
+      }
     } else {
-      // For "login", we just check if the user exists.
-      const existingUser = await api.getUser(username.value);
+      const existingUser = await api.getUser(trimmedUsername);
       if (!existingUser) {
         throw new Error("User does not exist. Please register first.");
       }
     }
-    // If registration or user check is successful, "log in" the user
-    auth.login(username.value);
+    auth.login(trimmedUsername);
     router.push("/");
   } catch (e) {
-    error.value = e.message;
+    error.value = e.message || "An error occurred. Please try again.";
   } finally {
     loading.value = false;
   }
@@ -57,16 +62,7 @@ const handleSubmit = async () => {
             v-model="username"
             required
             placeholder="Enter your username"
-          />
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            v-model="password"
-            required
-            placeholder="Enter your password"
+            :disabled="loading"
           />
         </div>
 

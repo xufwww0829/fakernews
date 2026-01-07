@@ -7,6 +7,7 @@
     <div v-if="highScore > 0" class="score-container">
       High Score: <span class="score">{{ highScore }}</span>
     </div>
+    <div v-if="scoreSaved" class="score-saved">Score saved!</div>
     
     <button @click="startGame" v-if="!isPlaying">
       {{ gameOver ? 'Play Again' : 'Start Game' }}
@@ -44,6 +45,7 @@ const score = ref(0);
 const highScore = ref(0);
 const gameOver = ref(false);
 const isPlaying = ref(false);
+const scoreSaved = ref(false);
 const { user } = useAuth();
 
 // Game Logic Variables
@@ -72,15 +74,21 @@ onUnmounted(() => {
 
 const loadHighScore = async () => {
   const currentUserId = user.value;
-  if (!currentUserId) return;
+  if (!currentUserId) {
+    highScore.value = 0;
+    return;
+  }
 
   try {
     const scores = await api.getSnakeUserScores(currentUserId);
     if (scores && scores.length > 0) {
       highScore.value = scores.reduce((max: number, s: any) => Math.max(max, s.score), 0);
+    } else {
+      highScore.value = 0;
     }
   } catch (e) {
     console.error("Failed to load snake scores", e);
+    highScore.value = 0;
   }
 };
 
@@ -94,6 +102,7 @@ const startGame = () => {
   foodEatenCount = 0;
   gameOver.value = false;
   isPlaying.value = true;
+  scoreSaved.value = false;
   startTime = Date.now();
   
   spawnFood();
@@ -213,24 +222,16 @@ const handleGameOver = async () => {
   stopGame();
   
   const currentUserId = user.value;
-  if (currentUserId && score.value > 0) {
-    const duration = Math.floor((Date.now() - startTime) / 1000); // in seconds (API expects int) or ms? 
-    // Schema says: duration: t.Integer()
-    // Usually APIs want ms, but let's check schema/service context if possible. 
-    // Backend schema just says Integer. Assuming ms based on other timestamps, but duration is usually seconds or ms.
-    // Let's pass ms. Wait, SnakeScore schema has 'duration'. 
-    // Let's use milliseconds to be safe for a "duration" field unless it's huge. 
-    // Actually, let's look at `frontend/src/api/index.ts` again.
-    // It passes duration directly. 
-    
-    // Let's stick to milliseconds for precision.
+  if (currentUserId && score.value > 0 && !scoreSaved.value) {
     const durationMs = Date.now() - startTime;
     
     try {
       await api.submitSnakeScore(currentUserId, score.value, durationMs, foodEatenCount);
-      loadHighScore();
+      scoreSaved.value = true;
+      await loadHighScore();
     } catch (e) {
       console.error("Failed to submit score", e);
+      scoreSaved.value = false;
     }
   }
 };
@@ -298,5 +299,11 @@ button:hover {
 .controls-hint {
   margin-top: 10px;
   color: #777;
+}
+
+.score-saved {
+  color: #42b883;
+  font-size: 1em;
+  margin-bottom: 10px;
 }
 </style>

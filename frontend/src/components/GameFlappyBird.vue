@@ -7,6 +7,7 @@
     <div v-if="highScore > 0" class="score-container">
       High Score: <span class="score">{{ highScore }}</span>
     </div>
+    <div v-if="scoreSaved" class="score-saved">Score saved!</div>
     
     <button @click="startGame" v-if="!isPlaying">
       {{ gameOver ? 'Play Again' : 'Start Game' }}
@@ -47,6 +48,7 @@ const score = ref(0);
 const highScore = ref(0);
 const gameOver = ref(false);
 const isPlaying = ref(false);
+const scoreSaved = ref(false);
 const { user } = useAuth();
 
 // Game Logic Variables
@@ -73,15 +75,21 @@ onUnmounted(() => {
 
 const loadHighScore = async () => {
   const currentUserId = user.value;
-  if (!currentUserId) return;
+  if (!currentUserId) {
+    highScore.value = 0;
+    return;
+  }
 
   try {
     const scores = await api.getFlappyBirdUserScores(currentUserId);
     if (scores && scores.length > 0) {
       highScore.value = scores.reduce((max: number, s: any) => Math.max(max, s.score), 0);
+    } else {
+      highScore.value = 0;
     }
   } catch (e) {
     console.error("Failed to load flappy bird scores", e);
+    highScore.value = 0;
   }
 };
 
@@ -94,6 +102,7 @@ const startGame = () => {
   score.value = 0;
   gameOver.value = false;
   isPlaying.value = true;
+  scoreSaved.value = false;
   startTime = Date.now();
   lastTime = 0;
 
@@ -251,14 +260,15 @@ const handleGameOver = async () => {
   stopGame();
 
   const currentUserId = user.value;
-  if (currentUserId && score.value > 0) {
+  if (currentUserId && score.value > 0 && !scoreSaved.value) {
     const duration = Date.now() - startTime;
     try {
-      // API: submitFlappyBirdScore: async (userId: string, score: number, pipesPassed: number, duration: number)
-      await api.submitFlappyBirdScore(currentUserId, score.value, score.value, duration); // pipesPassed is basically score here
-      loadHighScore();
+      await api.submitFlappyBirdScore(currentUserId, score.value, score.value, duration);
+      scoreSaved.value = true;
+      await loadHighScore();
     } catch (e) {
       console.error("Failed to submit score", e);
+      scoreSaved.value = false;
     }
   }
 };
@@ -327,5 +337,11 @@ button:hover {
 .controls-hint {
   margin-top: 10px;
   color: #777;
+}
+
+.score-saved {
+  color: #42b883;
+  font-size: 1em;
+  margin-bottom: 10px;
 }
 </style>
