@@ -315,11 +315,10 @@ const submitScore = async () => {
     return;
   }
 
-  const bestTile = getBestTile();
-  console.log("Submitting 2048 score:", { userId: currentUserId, score: score.value, bestTile, moves: moves.value });
+  console.log("Submitting 2048 score:", { userId: currentUserId, score: score.value });
 
   try {
-    const response = await api.submit2048Score(currentUserId, score.value, bestTile, moves.value);
+    const response = await api.submit2048Score(currentUserId, score.value);
     console.log("Submit response:", response);
     if (!response || (response as any).error) {
       console.error("Failed to submit 2048 score");

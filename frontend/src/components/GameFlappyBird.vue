@@ -261,9 +261,8 @@ const handleGameOver = async () => {
 
   const currentUserId = user.value;
   if (currentUserId && score.value > 0 && !scoreSaved.value) {
-    const duration = Date.now() - startTime;
     try {
-      await api.submitFlappyBirdScore(currentUserId, score.value, score.value, duration);
+      await api.submitFlappyBirdScore(currentUserId, score.value);
       scoreSaved.value = true;
       await loadHighScore();
     } catch (e) {

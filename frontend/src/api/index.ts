@@ -214,8 +214,8 @@ export const api = {
     return data.scores;
   },
 
-  submit2048Score: async (userId: string, score: number, bestTile?: number, moves?: number) => {
-    const { data, error } = await treaty.games["2048"].post({ userId, score, bestTile, moves });
+  submit2048Score: async (userId: string, score: number) => {
+    const { data, error } = await treaty.games["2048"].post({ userId, score });
     if (error) throw createFriendlyError(error);
     return data;
   },
@@ -227,8 +227,8 @@ export const api = {
     return data.scores;
   },
 
-  submitSnakeScore: async (userId: string, score: number, duration: number, foodEaten?: number) => {
-    const { data, error } = await treaty.games.snake.post({ userId, score, duration, foodEaten });
+  submitSnakeScore: async (userId: string, score: number) => {
+    const { data, error } = await treaty.games.snake.post({ userId, score });
     if (error) throw createFriendlyError(error);
     return data;
   },
@@ -240,8 +240,8 @@ export const api = {
     return data.scores;
   },
 
-  submitFlappyBirdScore: async (userId: string, score: number, pipesPassed: number, duration: number) => {
-    const { data, error } = await treaty.games.flappybird.post({ userId, score, pipesPassed, duration });
+  submitFlappyBirdScore: async (userId: string, score: number) => {
+    const { data, error } = await treaty.games.flappybird.post({ userId, score });
     if (error) throw createFriendlyError(error);
     return data;
   },

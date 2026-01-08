@@ -1,14 +1,17 @@
 import { Elysia, status, t } from "elysia";
 import { db } from "../../db";
-import { game2048Scores, snakeScores, flappyBirdScores } from "../../db/schema";
-import { eq, desc } from "drizzle-orm";
-import { Game2048Score, SnakeScore, FlappyBirdScore, InsertGame2048Score, InsertSnakeScore, InsertFlappyBirdScore } from "./schema";
+import { gameScores } from "../../db/schema";
+import { eq, desc, and } from "drizzle-orm";
+import { GameScore, InsertGameScore } from "./schema";
 
 const games = new Elysia({ prefix: "/games" })
   .get("/2048/users/:userId", async ({ params }) => {
-    const scores = await db.query.game2048Scores.findMany({
-      where: eq(game2048Scores.userId, params.userId),
-      orderBy: desc(game2048Scores.score),
+    const scores = await db.query.gameScores.findMany({
+      where: and(
+        eq(gameScores.userId, params.userId),
+        eq(gameScores.gameType, "2048")
+      ),
+      orderBy: desc(gameScores.score),
       limit: 10,
     });
 
@@ -22,18 +25,17 @@ const games = new Elysia({ prefix: "/games" })
     response: {
       200: t.Object({
         message: t.Optional(t.String()),
-        scores: t.Array(Game2048Score),
+        scores: t.Array(GameScore),
       }),
     },
   })
 
   .post("/2048", async ({ body }) => {
     try {
-      const newScore = await db.insert(game2048Scores).values({
+      const newScore = await db.insert(gameScores).values({
         userId: body.userId,
+        gameType: "2048",
         score: body.score,
-        bestTile: body.bestTile || 2,
-        moves: body.moves || 0,
         time: new Date().getTime(),
       }).returning();
 
@@ -42,17 +44,20 @@ const games = new Elysia({ prefix: "/games" })
       return status(500, "Failed to create 2048 score");
     }
   }, {
-    body: InsertGame2048Score,
+    body: InsertGameScore,
     response: {
-      200: Game2048Score,
+      200: GameScore,
       500: t.String(),
     },
   })
 
   .get("/snake/users/:userId", async ({ params }) => {
-    const scores = await db.query.snakeScores.findMany({
-      where: eq(snakeScores.userId, params.userId),
-      orderBy: desc(snakeScores.score),
+    const scores = await db.query.gameScores.findMany({
+      where: and(
+        eq(gameScores.userId, params.userId),
+        eq(gameScores.gameType, "snake")
+      ),
+      orderBy: desc(gameScores.score),
       limit: 10,
     });
 
@@ -66,18 +71,17 @@ const games = new Elysia({ prefix: "/games" })
     response: {
       200: t.Object({
         message: t.Optional(t.String()),
-        scores: t.Array(SnakeScore),
+        scores: t.Array(GameScore),
       }),
     },
   })
 
   .post("/snake", async ({ body }) => {
     try {
-      const newScore = await db.insert(snakeScores).values({
+      const newScore = await db.insert(gameScores).values({
         userId: body.userId,
+        gameType: "snake",
         score: body.score,
-        duration: body.duration,
-        foodEaten: body.foodEaten || 0,
         time: new Date().getTime(),
       }).returning();
 
@@ -87,17 +91,20 @@ const games = new Elysia({ prefix: "/games" })
       return status(500, "Failed to create snake score");
     }
   }, {
-    body: InsertSnakeScore,
+    body: InsertGameScore,
     response: {
-      200: SnakeScore,
+      200: GameScore,
       500: t.String(),
     },
   })
 
   .get("/flappybird/users/:userId", async ({ params }) => {
-    const scores = await db.query.flappyBirdScores.findMany({
-      where: eq(flappyBirdScores.userId, params.userId),
-      orderBy: desc(flappyBirdScores.score),
+    const scores = await db.query.gameScores.findMany({
+      where: and(
+        eq(gameScores.userId, params.userId),
+        eq(gameScores.gameType, "flappybird")
+      ),
+      orderBy: desc(gameScores.score),
       limit: 10,
     });
 
@@ -111,18 +118,17 @@ const games = new Elysia({ prefix: "/games" })
     response: {
       200: t.Object({
         message: t.Optional(t.String()),
-        scores: t.Array(FlappyBirdScore),
+        scores: t.Array(GameScore),
       }),
     },
   })
 
   .post("/flappybird", async ({ body }) => {
     try {
-      const newScore = await db.insert(flappyBirdScores).values({
+      const newScore = await db.insert(gameScores).values({
         userId: body.userId,
+        gameType: "flappybird",
         score: body.score,
-        pipesPassed: body.pipesPassed,
-        duration: body.duration,
         time: new Date().getTime(),
       }).returning();
 
@@ -132,9 +138,9 @@ const games = new Elysia({ prefix: "/games" })
       return status(500, "Failed to create Flappy Bird score");
     }
   }, {
-    body: InsertFlappyBirdScore,
+    body: InsertGameScore,
     response: {
-      200: FlappyBirdScore,
+      200: GameScore,
       500: t.String(),
     },
   })
@@ -143,52 +149,26 @@ const games = new Elysia({ prefix: "/games" })
     const limit = query.limit ? parseInt(query.limit) : 10;
 
     try {
-      switch (params.game) {
-        case "2048":
-          const top2048 = await db.query.game2048Scores.findMany({
-            orderBy: desc(game2048Scores.score),
-            limit,
-            with: {
-              user: {
-                columns: {
-                  id: true,
-                },
-              },
-            },
-          });
-          return { scores: top2048 };
+      const validGameTypes = ["2048", "snake", "flappybird"];
 
-        case "snake":
-          const topSnake = await db.query.snakeScores.findMany({
-            orderBy: desc(snakeScores.score),
-            limit,
-            with: {
-              user: {
-                columns: {
-                  id: true,
-                },
-              },
-            },
-          });
-          return { scores: topSnake };
-
-        case "flappybird":
-          const topFlappy = await db.query.flappyBirdScores.findMany({
-            orderBy: desc(flappyBirdScores.score),
-            limit,
-            with: {
-              user: {
-                columns: {
-                  id: true,
-                },
-              },
-            },
-          });
-          return { scores: topFlappy };
-
-        default:
-          return status(400, "Invalid game type. Valid options: 2048, snake, flappybird");
+      if (!validGameTypes.includes(params.game)) {
+        return status(400, "Invalid game type. Valid options: 2048, snake, flappybird");
       }
+
+      const scores = await db.query.gameScores.findMany({
+        where: eq(gameScores.gameType, params.game),
+        orderBy: desc(gameScores.score),
+        limit,
+        with: {
+          user: {
+            columns: {
+              id: true,
+            },
+          },
+        },
+      });
+
+      return { scores };
     } catch (err) {
       console.error("Error fetching leaderboard:", err);
       return status(500, "Failed to fetch leaderboard");
@@ -201,13 +181,9 @@ const games = new Elysia({ prefix: "/games" })
         scores: t.Array(t.Object({
           id: t.Integer(),
           userId: t.String(),
+          gameType: t.Union([t.Literal("2048"), t.Literal("snake"), t.Literal("flappybird")]),
           score: t.Integer(),
           time: t.Integer(),
-          bestTile: t.Optional(t.Integer()),
-          moves: t.Optional(t.Integer()),
-          duration: t.Optional(t.Integer()),
-          pipesPassed: t.Optional(t.Integer()),
-          foodEaten: t.Optional(t.Integer()),
           user: t.Object({ id: t.String() }),
         })),
       }),

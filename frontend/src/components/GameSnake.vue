@@ -220,13 +220,11 @@ const draw = () => {
 const handleGameOver = async () => {
   gameOver.value = true;
   stopGame();
-  
+
   const currentUserId = user.value;
   if (currentUserId && score.value > 0 && !scoreSaved.value) {
-    const durationMs = Date.now() - startTime;
-    
     try {
-      await api.submitSnakeScore(currentUserId, score.value, durationMs, foodEatenCount);
+      await api.submitSnakeScore(currentUserId, score.value);
       scoreSaved.value = true;
       await loadHighScore();
     } catch (e) {
