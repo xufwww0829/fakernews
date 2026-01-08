@@ -152,9 +152,23 @@ p {
 
 /* Utility Classes */
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
   padding: 0 24px;
+}
+
+/* 超大屏幕上增加左边距 */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 100%;
+    padding-left: 80px;
+    padding-right: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
 }
 
 .loading, .error {
