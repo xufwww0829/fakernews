@@ -69,6 +69,10 @@ export const SelectItem = t.Union([
     ...BaseMeta,
     ...DeadFlag,
     ...KidsField,
+    title: t.String({
+      title: "Story Title",
+      description: "The title of the story",
+    }),
     url: t.String({
       title: "Story URL",
       description: "External link of the story",

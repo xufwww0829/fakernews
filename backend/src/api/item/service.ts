@@ -50,6 +50,7 @@ export const getItemById = async ({ params }: { params: { id: number } }) => {
         dead: item.dead,
         by: item.by,
         time: item.time,
+        title: item.title!,
         url: item.url!,
         text: item.text ?? undefined,
         score: item.score,
