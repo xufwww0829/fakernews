@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { items } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or } from "drizzle-orm";
 
 export async function getTopStories(
   { query: { limit = 30, offset = 0 } }: { query: { limit?: number; offset?: number } }
@@ -51,4 +51,21 @@ export async function getTopJobs(
   });
 
   return jobs.map(job => job.id);
+}
+
+export async function getNewStories(
+  { query: { limit = 30, offset = 0 } }: { query: { limit?: number; offset?: number } }
+) {
+  const stories = await db.query.items.findMany({
+    where: and(
+      eq(items.type, "story"),
+      eq(items.deleted, false),
+      eq(items.dead, false)
+    ),
+    orderBy: [desc(items.time)],
+    limit,
+    offset,
+  });
+
+  return stories.map(story => story.id);
 }

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getTopStories, getTopComments, getTopJobs } from "./service";
+import { getTopStories, getTopComments, getTopJobs, getNewStories } from "./service";
 
 export const top = new Elysia({ prefix: "/top" })
   .get("/stories", getTopStories,
@@ -25,6 +25,17 @@ export const top = new Elysia({ prefix: "/top" })
     }
   )
   .get("/jobs", getTopJobs,
+    {
+      query: t.Object({
+        limit: t.Optional(t.Number({ minimum: 1, maximum: 100 })),
+        offset: t.Optional(t.Number({ minimum: 0 })),
+      }),
+      response: {
+        200: t.Array(t.Integer()),
+      }
+    }
+  )
+  .get("/new/stories", getNewStories,
     {
       query: t.Object({
         limit: t.Optional(t.Number({ minimum: 1, maximum: 100 })),
