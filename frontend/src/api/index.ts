@@ -56,6 +56,8 @@ export const api = {
     let endpoint;
     if (type === "jobs") {
       endpoint = treaty.top.jobs;
+    } else if (type === "new") {
+      endpoint = treaty.top.new.stories;
     } else {
       endpoint = treaty.top.stories;
     }
