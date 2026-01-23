@@ -1,7 +1,7 @@
 import { status } from "elysia";
 import { db } from "@/db";
 import { eq, and, sql } from "drizzle-orm";
-import { items, users, upvotes } from "@/db/schema";
+import { items, users, upvotes, favorites } from "@/db/schema";
 import { InsertItem } from "./schema";
 
 export const getItemById = async ({ params }: { params: { id: number } }) => {
@@ -204,4 +204,119 @@ export const checkMultipleUpvoteStatus = async ({
   });
 
   return statusMap;
+};
+
+// Favorite functions
+export const toggleFavorite = async ({
+  params,
+  body,
+}: {
+  params: { id: number };
+  body: { userId: string };
+}) => {
+  if (!body.userId) {
+    return status(401, "User ID is required");
+  }
+
+  // 检查用户是否已经收藏过这个 item
+  const existingFavorite = await db.query.favorites.findFirst({
+    where: and(
+      eq(favorites.userId, body.userId),
+      eq(favorites.itemId, params.id)
+    ),
+  });
+
+  let isFavorited: boolean;
+
+  if (existingFavorite) {
+    // 已收藏，取消收藏（toggle off）
+    await db.delete(favorites).where(eq(favorites.id, existingFavorite.id));
+    isFavorited = false;
+  } else {
+    // 未收藏，添加收藏（toggle on）
+    await db.insert(favorites).values({
+      userId: body.userId,
+      itemId: params.id,
+    });
+    isFavorited = true;
+  }
+
+  return {
+    id: params.id,
+    favorited: isFavorited,
+  };
+};
+
+export const checkFavoriteStatus = async ({
+  params,
+  query,
+}: {
+  params: { id: number };
+  query: { userId: string };
+}) => {
+  const favorite = await db.query.favorites.findFirst({
+    where: and(
+      eq(favorites.userId, query.userId),
+      eq(favorites.itemId, params.id)
+    ),
+  });
+
+  return {
+    favorited: !!favorite,
+  };
+};
+
+export const checkMultipleFavoriteStatus = async ({
+  userId,
+  itemIds,
+}: {
+  userId: string;
+  itemIds: number[];
+}) => {
+  const userFavorites = await db.query.favorites.findMany({
+    where: eq(favorites.userId, userId),
+  });
+
+  const favoritedItemIds = new Set(userFavorites.map(f => f.itemId));
+
+  const statusMap: Record<number, boolean> = {};
+  itemIds.forEach(id => {
+    statusMap[id] = favoritedItemIds.has(id);
+  });
+
+  return statusMap;
+};
+
+export const getUserFavorites = async ({
+  params,
+}: {
+  params: { id: string };
+}) => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, params.id),
+  });
+
+  if (!user) {
+    return status(404, "User not found");
+  }
+
+  const userFavorites = await db.query.favorites.findMany({
+    where: eq(favorites.userId, params.id),
+    with: {
+      item: true,
+    },
+    orderBy: (favorites, { desc }) => [desc(favorites.time)],
+  });
+
+  return userFavorites.map(f => ({
+    id: f.item.id,
+    type: f.item.type,
+    time: f.item.time,
+    title: f.item.title ?? undefined,
+    text: f.item.text ?? undefined,
+    url: f.item.url ?? undefined,
+    score: f.item.score,
+    parent: f.item.parent ?? undefined,
+    favoritedAt: f.time,
+  }));
 };

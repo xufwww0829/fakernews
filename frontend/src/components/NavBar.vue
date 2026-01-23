@@ -78,6 +78,9 @@ const handleLogout = () => {
         <div class="nav-actions">
           <template v-if="auth.user.value">
             <RouterLink to="/submit" class="nav-btn submit">Submit</RouterLink>
+            <RouterLink to="/favorites" class="nav-link" :class="{ active: currentPath === '/favorites' }">
+              Favorites
+            </RouterLink>
             <RouterLink :to="`/user/${auth.user.value}`" class="nav-link user-link">
               {{ auth.user.value }}
             </RouterLink>
