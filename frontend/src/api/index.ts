@@ -272,4 +272,34 @@ export const api = {
     // @ts-ignore
     return data.scores;
   },
+
+  // --- Favorite APIs ---
+  toggleFavorite: async (id: string, userId: string) => {
+    const { error, data } = await treaty.item.items[id].favorite.post({ userId });
+    if (error) throw createFriendlyError(error);
+    return data;
+  },
+
+  checkFavoriteStatus: async (id: string, userId: string) => {
+    const { data, error } = await treaty.item.items[id].favorite.get({
+      $query: { userId },
+    });
+    if (error) throw createFriendlyError(error);
+    return data?.favorited || false;
+  },
+
+  checkMultipleFavoriteStatus: async (ids: string[], userId: string) => {
+    const { data, error } = await treaty.item.items.favorites.check.post({
+      userId,
+      itemIds: ids.map(id => Number(id)),
+    });
+    if (error) throw createFriendlyError(error);
+    return data || {};
+  },
+
+  getUserFavorites: async (userId: string) => {
+    const { data, error } = await treaty.user[userId].favorites.get();
+    if (error) throw createFriendlyError(error);
+    return data || [];
+  },
 };

@@ -11,6 +11,7 @@ import GameSnakeView from "./views/GameSnakeView.vue";
 import GameFlappyBirdView from "./views/GameFlappyBirdView.vue";
 import LeaderboardView from "./views/LeaderboardView.vue";
 import CommentsView from "./views/CommentsView.vue";
+import FavoritesView from "./views/FavoritesView.vue";
 import "./style.css";
 
 const router = createRouter({
@@ -21,6 +22,8 @@ const router = createRouter({
     { path: "/comments", component: CommentsView },
     { path: "/story/:id", component: StoryView },
     { path: "/user/:id", component: UserView },
+    { path: "/user/:id/favorites", component: FavoritesView },
+    { path: "/favorites", component: FavoritesView },
     { path: "/submit", component: SubmitView },
     { path: "/login", component: LoginView },
     { path: "/game/2048", component: Game2048View },

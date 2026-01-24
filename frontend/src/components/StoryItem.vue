@@ -35,6 +35,7 @@ const timeAgo = computed(() => {
 });
 
 const isUpvoted = computed(() => props.story.upvoted || false);
+const isFavorited = computed(() => props.story.favorited || false);
 
 const handleUpvote = async (event) => {
   event.stopPropagation();
@@ -64,13 +65,36 @@ const handleUpvote = async (event) => {
   }
 };
 
+const handleFavorite = async (event) => {
+  event.stopPropagation();
+
+  if (!user.value) {
+    alert("Please log in to favorite");
+    return;
+  }
+
+  // 乐观更新
+  const wasFavorited = isFavorited.value;
+  props.story.favorited = !wasFavorited;
+
+  try {
+    const result = await api.toggleFavorite(props.story.id, user.value);
+    if (result) {
+      props.story.favorited = result.favorited;
+    }
+  } catch (error) {
+    // 回滚
+    props.story.favorited = wasFavorited;
+    console.error("Failed to toggle favorite:", error);
+  }
+};
 </script>
 
 <template>
   <RouterLink :to="`/story/${story.id}`" custom v-slot="{ href, navigate }">
     <article class="story-item" :href="href" @click="navigate">
       <div class="story-rank" v-if="rank">{{ rank }}.</div>
-      
+
       <div class="upvote-score-container">
         <button
           class="upvote-btn"
@@ -84,18 +108,18 @@ const handleUpvote = async (event) => {
         </button>
         <div class="story-score">{{ story.score }}</div>
       </div>
-      
+
       <div class="story-content">
         <div class="story-title-row">
-          <span 
+          <span
             class="story-title"
           >
             {{ story.title }}
           </span>
-          <a 
+          <a
             v-if="domain"
-            :href="story.url" 
-            target="_blank" 
+            :href="story.url"
+            target="_blank"
             rel="noopener noreferrer"
             class="story-domain"
             @click.stop
@@ -103,7 +127,7 @@ const handleUpvote = async (event) => {
             ({{ domain }})
           </a>
         </div>
-        
+
         <div class="story-meta">
           <RouterLink :to="`/user/${story.by}`" class="story-author" @click.stop>
             {{ story.by }}
@@ -114,6 +138,16 @@ const handleUpvote = async (event) => {
           <span class="story-comments">
             {{ story.descendants || 0 }} comments
           </span>
+          <button
+            class="favorite-btn"
+            :class="{ favorited: isFavorited }"
+            @click="handleFavorite"
+            title="Favorite"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </button>
         </div>
        </div>
      </article>
@@ -242,6 +276,26 @@ const handleUpvote = async (event) => {
 
 .story-author:hover {
   color: var(--link);
+}
+
+.favorite-btn {
+  padding: 4px;
+  color: var(--text-tertiary);
+  transition: all 0.2s;
+  margin-left: 8px;
+}
+
+.favorite-btn:hover {
+  color: var(--accent);
+  transform: scale(1.2);
+}
+
+.favorite-btn.favorited {
+  color: #ff6600;
+}
+
+.favorite-btn.favorited svg {
+  fill: currentColor;
 }
 
 @media (max-width: 640px) {

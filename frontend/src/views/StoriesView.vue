@@ -36,6 +36,22 @@ const loadUpvoteStatus = async (storiesList) => {
   }
 };
 
+const loadFavoriteStatus = async (storiesList) => {
+  if (!user.value) return;
+
+  try {
+    const storyIds = storiesList.map(s => s.id.toString());
+    const statusMap = await api.checkMultipleFavoriteStatus(storyIds, user.value);
+
+    // 将 favorite 状态添加到每个故事对象
+    storiesList.forEach(story => {
+      story.favorited = statusMap[story.id] || false;
+    });
+  } catch (e) {
+    console.error("Error loading favorite status:", e);
+  }
+};
+
 const loadStories = async (isLoadMore = false) => {
   if (loading.value) return;
   loading.value = true;
@@ -58,6 +74,8 @@ const loadStories = async (isLoadMore = false) => {
 
     // 加载 upvote 状态
     await loadUpvoteStatus(newStories);
+    // 加载 favorite 状态
+    await loadFavoriteStatus(newStories);
   } catch (e) {
     error.value = e instanceof Error ? e.message : "Failed to load stories.";
     console.error("Error loading stories:", e);

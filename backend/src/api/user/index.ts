@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { InsertUser, UpdateUserKarma, SelectUser } from "./schema";
 import { getUserById, getUserItems, createUser, updateUserKarma } from "./service";
+import { getUserFavorites } from "../item/service";
 
 export const user = new Elysia({ prefix: "/user" })
   .get("/:id", getUserById,
@@ -52,6 +53,25 @@ export const user = new Elysia({ prefix: "/user" })
       body: UpdateUserKarma,
       response: {
         200: SelectUser,
+        404: t.String(),
+      }
+    }
+  )
+  .get("/:id/favorites", getUserFavorites,
+    {
+      params: t.Object({ id: t.String() }),
+      response: {
+        200: t.Array(t.Object({
+          id: t.Integer(),
+          type: t.String(),
+          time: t.Integer(),
+          title: t.Optional(t.String()),
+          text: t.Optional(t.String()),
+          url: t.Optional(t.String()),
+          score: t.Integer(),
+          parent: t.Optional(t.Integer()),
+          favoritedAt: t.Integer(),
+        })),
         404: t.String(),
       }
     }
